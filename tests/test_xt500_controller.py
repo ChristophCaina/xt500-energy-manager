@@ -1101,6 +1101,128 @@ class ControllerTest(unittest.TestCase):
         self.assertEqual(90, confirmed.normal_limit)
         self.assertIsNone(confirmed.pending_write)
 
+    def test_outage_limit_is_restored_before_manual_changes_are_adopted(self):
+        for pending in (None, 90):
+            with self.subTest(pending=pending):
+                decision = controller.ChargeLimitSyncDecision(90, False, pending)
+                # 23:13:38 fault, reset feedback; 23:14:53 ready still reports 100.
+                for trusted, device in ((False, 90), (False, 100), (True, 100),
+                                        (True, 100), (True, 90), (True, 85)):
+                    decision = controller.reconcile_normal_charge_limit(
+                        normal_limit=decision.normal_limit, device_limit=device,
+                        charge_active=False, override_active=decision.override_active,
+                        pending_write=decision.pending_write, low=0, high=100,
+                        step=1, feedback_trusted=trusted,
+                    )
+                    self.assertEqual(85 if device == 85 else 90, decision.normal_limit)
+                    if device == 100:
+                        self.assertTrue(decision.override_active)
+                self.assertFalse(decision.override_active)
+
+    def test_runtime_latches_restore_at_fault_entry_without_calculation(self):
+        tree = ast.parse((ROOT / PACKAGE.replace(".", "/") / "runtime.py").read_text())
+        runtime_class = next(node for node in tree.body
+                             if isinstance(node, ast.ClassDef) and node.name == "XT500Runtime")
+        for name in ("_begin_control_error", "_begin_communication_pause"):
+            with self.subTest(method=name):
+                method = next(node for node in runtime_class.body
+                              if isinstance(node, ast.FunctionDef) and node.name == name)
+                method.decorator_list = []
+                namespace = dict(datetime=datetime, UTC=UTC, monotonic=lambda: 1)
+                exec(compile(ast.Module(body=[method], type_ignores=[]),
+                             "runtime.py", "exec"), namespace)
+                runtime = SimpleNamespace(
+                    _write_blocked=False, regulation_enabled=True,
+                    automatic_recovery_enabled=True, _communication_pause_active=False,
+                    _charge_limit_override_active=False,
+                    _communication_pause_task=SimpleNamespace(done=lambda: False),
+                    _clear_communication_pause=Mock(), _cancel_recovery_task=Mock(),
+                    _schedule_recovery=Mock(), _notify=Mock(), _error_detail=str,
+                )
+                namespace[name](runtime, ConnectionResetError("Connection reset by peer"))
+                self.assertTrue(runtime._charge_limit_override_active)
+
+    def test_runtime_fault_feedback_does_not_persist_reset_limit(self):
+        tree = ast.parse((ROOT / PACKAGE.replace(".", "/") / "runtime.py").read_text())
+        runtime_class = next(node for node in tree.body
+                             if isinstance(node, ast.ClassDef) and node.name == "XT500Runtime")
+        calculate = next(node for node in runtime_class.body
+                         if isinstance(node, ast.FunctionDef) and node.name == "async_calculate")
+        start = next(i for i, node in enumerate(calculate.body)
+                     if isinstance(node, ast.Assign)
+                     and isinstance(node.targets[0], ast.Name)
+                     and node.targets[0].id == "charge_limit_sync")
+        end = next(i for i, node in enumerate(calculate.body)
+                   if isinstance(node, ast.Assign)
+                   and isinstance(node.targets[0], ast.Attribute)
+                   and node.targets[0].attr == "desired_charge_limit")
+        block = compile(ast.Module(body=calculate.body[start:end + 1],
+                                   type_ignores=[]), "runtime.py", "exec")
+        for blocked, paused, recovery in ((True, False, "waiting_feedback"),
+                                          (False, True, "ready"),
+                                          (False, False, "attempting")):
+            with self.subTest(blocked=blocked, paused=paused, recovery=recovery):
+                runtime = SimpleNamespace(
+                    settings={"normal": 90}, _store=Mock(),
+                    _write_blocked=blocked, _communication_pause_active=paused,
+                    _recovery_status=recovery, _charge_limit_override_active=False,
+                    _normal_charge_limit_write_pending=None,
+                )
+                namespace = dict(self=runtime, SETTING_NORMAL_CHARGE_LIMIT="normal",
+                                 CONF_MAX_CHARGE_SOC_ENTITY="device",
+                                 values={"device": 100},
+                                 charge_request=SimpleNamespace(active=False, target_soc=100),
+                                 charge_limit_low=0, charge_limit_high=100, charge_limit_step=1,
+                                 reconcile_normal_charge_limit=controller.reconcile_normal_charge_limit,
+                                 select_charge_limit=controller.select_charge_limit)
+                exec(block, namespace)
+                runtime._store.async_delay_save.assert_not_called()
+                self.assertEqual(90, runtime.settings["normal"])
+                self.assertEqual(90, runtime.desired_charge_limit)
+                runtime._write_blocked = runtime._communication_pause_active = False
+                runtime._recovery_status = "ready"
+                exec(block, namespace)
+                runtime._store.async_delay_save.assert_not_called()
+                self.assertEqual(90, runtime.desired_charge_limit)
+                namespace["values"]["device"] = 90
+                exec(block, namespace)
+                namespace["values"]["device"] = 85
+                exec(block, namespace)
+                self.assertEqual(85, runtime.settings["normal"])
+                runtime._store.async_delay_save.assert_called_once()
+
+    def test_outage_does_not_acknowledge_pending_write(self):
+        decision = controller.reconcile_normal_charge_limit(
+            normal_limit=90, device_limit=90, charge_active=False,
+            override_active=False, pending_write=90, low=0, high=100,
+            step=1, feedback_trusted=False,
+        )
+        self.assertEqual(90, decision.pending_write)
+        self.assertTrue(decision.override_active)
+
+    def test_temporary_manual_cycle_and_tariff_targets_survive_outage(self):
+        for target in (80, 95, 100):
+            with self.subTest(target=target):
+                decision = controller.ChargeLimitSyncDecision(90, False, None)
+                for active, trusted, device in ((True, True, target),
+                                                (True, False, 100),
+                                                (True, True, target),
+                                                (False, True, target),
+                                                (False, True, 90)):
+                    decision = controller.reconcile_normal_charge_limit(
+                        normal_limit=decision.normal_limit, device_limit=device,
+                        charge_active=active, override_active=decision.override_active,
+                        pending_write=decision.pending_write, low=0, high=100,
+                        step=1, feedback_trusted=trusted,
+                    )
+                    self.assertEqual(90, decision.normal_limit)
+                    desired = controller.select_charge_limit(
+                        normal_limit=decision.normal_limit, target_soc=target,
+                        charge_active=active, low=0, high=100, step=1,
+                    )
+                    self.assertEqual(max(90, target) if active else 90, desired)
+                self.assertFalse(decision.override_active)
+
     def test_new_cycle_without_reference_is_not_due(self):
         now = datetime(2026, 7, 23, 12, tzinfo=UTC)
         self.assertFalse(

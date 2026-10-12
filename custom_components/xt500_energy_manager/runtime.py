@@ -705,6 +705,11 @@ class XT500Runtime:
             low=charge_limit_low,
             high=charge_limit_high,
             step=charge_limit_step,
+            feedback_trusted=(
+                not self._write_blocked
+                and not self._communication_pause_active
+                and self._recovery_status in ("ready", "disabled")
+            ),
         )
         if (
             float(self.settings[SETTING_NORMAL_CHARGE_LIMIT])
@@ -1797,6 +1802,7 @@ class XT500Runtime:
         """Latch a production write error and start the guarded recovery flow."""
         self._clear_communication_pause()
         self._write_blocked = True
+        self._charge_limit_override_active = True
         self._control_error_at = datetime.now(UTC)
         self.control_error_message = f"Schreibfehler: {self._error_detail(err)}"
         self._control_apply_requested = False
@@ -1833,6 +1839,7 @@ class XT500Runtime:
             return
         if not self._communication_pause_active:
             self._communication_pause_active = True
+            self._charge_limit_override_active = True
             self._communication_pause_at = datetime.now(UTC)
             self._communication_pause_started_monotonic = monotonic()
             self._communication_stable_since_monotonic = None

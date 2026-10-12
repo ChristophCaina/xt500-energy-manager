@@ -312,7 +312,7 @@ Neuladen auch im Energiemanager-Dashboard.
 5. Als URL exakt eintragen:
 
    ```text
-   /xt500_energy_manager/xt500-energy-dashboard-strategy.js?v=1.11.1
+   /xt500_energy_manager/xt500-energy-dashboard-strategy.js?v=1.11.2
    ```
 
 6. Als Ressourcentyp **JavaScript-Modul** auswählen.
@@ -838,7 +838,7 @@ wird ein vermeintlich ausgeschalteter Regler mit alten Sollwerten vermieden.
   Eintrag neu laden oder Home Assistant neu starten. Die optionalen Sensoren
   werden bei jedem Laden der Integration erneut automatisch erkannt.
 - Im Strategy-Editor prüfen, ob der Block **Energie heute** ausgeblendet wurde.
-- Die Dashboard-Ressource auf `?v=1.11.1` setzen und Ressourcen beziehungsweise
+- Die Dashboard-Ressource auf `?v=1.11.2` setzen und Ressourcen beziehungsweise
   Browser vollständig neu laden.
 
 ### Eingangsdaten sind ungültig
@@ -878,7 +878,7 @@ Auch bei einem kurzen Netzbezug bleibt diese Rückführung aktiv, damit der
 Sollwert nicht wieder in die Akkuentladung zurückpendelt. Die Regelung senkt
 dabei ausschließlich die XT500-Ausgangsleistung.
 
-Version 1.11.1 baut auf dem für SunEnergyXT 1.1.3 vorbereiteten Stand auf. Rückmeldungen aus
+Version 1.11.2 baut auf dem für SunEnergyXT 1.1.3 vorbereiteten Stand auf. Rückmeldungen aus
 unterschiedlichen XT500- und XT500-Pro-Systemen, Firmwareständen,
 PV-Kopplungen und Stromzählern sind weiterhin willkommen.
 

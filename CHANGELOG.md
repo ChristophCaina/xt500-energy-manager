@@ -1,5 +1,16 @@
 # Änderungsprotokoll
 
+## 1.11.2 – 2026-10-12
+
+- Gespeichertes Normal-Ladelimit gegen Geräte-Rückmeldungen während Schreibfehlern,
+  Kommunikationspausen und Wiederherstellung geschützt.
+- Schutz bleibt nach Recovery erhalten, bis das Gerät den gespeicherten Normalwert
+  bestätigt. Danach werden manuelle Änderungen über die Geräteentität wieder übernommen.
+- Temporäre Ladeziele und vorhandene Einstellungen bleiben erhalten; bereits
+  gespeicherte 100 % werden nicht automatisch zurückgesetzt.
+- Regressionstests für Fehlerablauf, Wiederherstellung, manuelle Änderungen,
+  ausstehende Writes und temporäre Ladeziele ergänzt.
+
 ## 1.11.1 – 2026-10-02
 
 - Pendeln zwischen Normalbetrieb und Vollakku-PV-Bypass behoben: Beim Einstieg

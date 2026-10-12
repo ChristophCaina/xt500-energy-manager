@@ -297,13 +297,15 @@ def reconcile_normal_charge_limit(
     low: float,
     high: float,
     step: float,
+    feedback_trusted: bool = True,
 ) -> ChargeLimitSyncDecision:
     """Synchronize the normal limit without adopting temporary charge targets."""
     normal = quantize_number_value(normal_limit, low=low, high=high, step=step)
     device = quantize_number_value(device_limit, low=low, high=high, step=step)
     tolerance = max(float(step) / 2, 0.5)
 
-    if charge_active:
+    if charge_active or not feedback_trusted:
+        # Keep restoration latched after an outage, even once recovery is ready.
         return ChargeLimitSyncDecision(normal, True, pending_write)
 
     if pending_write is not None:
@@ -312,7 +314,7 @@ def reconcile_normal_charge_limit(
         )
         return ChargeLimitSyncDecision(
             normal,
-            override_active,
+            override_active and abs(device - normal) >= tolerance,
             None if abs(device - pending) < tolerance else pending,
         )
 
