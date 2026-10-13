@@ -303,6 +303,14 @@ zusammenfassen oder vollständig ausblenden.
 
 ### Einstellungsansicht nicht übersehen
 
+![Speicherübersicht mit Speicherstand, aktuellen Leistungsflüssen, Tagesenergie und Regelungsstatus](docs/images/dashboard-speicher.jpg)
+
+**So liest du die Speicherübersicht:** Links stehen Akkustand und heutige
+Energiewerte, rechts die aktuellen Leistungsflüsse und der Regelungsstatus.
+Im gezeigten Beispiel ist die Entladung wegen der Mindest-SOC-Grenze gesperrt;
+das ist ein Schutzstatus und keine Fehlermeldung. Die Zahlen sind Momentaufnahmen
+einer Beispielinstallation und keine empfohlenen Einstellungen.
+
 Oben im automatisch erzeugten Dashboard gibt es mehrere Reiter. Das Haussymbol
 öffnet die Speicherübersicht. Über das **Zahnradsymbol** ganz rechts wird die
 vollständige Einstellungsansicht geöffnet. Je nach Bildschirmbreite werden
@@ -315,6 +323,14 @@ werden.
 > Auf das markierte Zahnradsymbol klicken. Ladeziele und Zyklusladung liegen
 > unter **Laden und Zyklus**, erweiterte Regelparameter unter **Feinabstimmung**.
 
+![Einstellungsansicht mit Hauptsteuerung, Betriebsart, Batteriegrenzen sowie Zugang zu Laden und Feinabstimmung](docs/images/dashboard-einstellungen.jpg)
+
+**Hier stellst du die Integration ein:** Mit **Regelung aktiv** schaltest du
+die Steuerung ein. **Betriebsart und Netzziel** enthält den Grundmodus und
+die Leistungsgrenzen. Unter **Batteriegrenzen und Schutz** liegt die Reserve.
+Die Schaltflächen **Laden und Zyklus** und **Feinabstimmung** öffnen eigene
+Unterseiten; du musst dafür keine weitere Integration installieren.
+
 Sie verwendet ausschließlich standardmäßig mit Home Assistant ausgelieferte
 Karten.
 
@@ -325,6 +341,14 @@ führende Konfiguration: Änderungen an ihr erscheinen nach einem vollständigen
 Neuladen auch im Energiemanager-Dashboard.
 
 ### Optionale Entladereserve
+
+![Reserve-Bedienung: ausgeschalteter Reserve-Schalter, 30 Prozent Reserve, Wiederfreigabe bei 33 Prozent und inaktive Sperre](docs/images/dashboard-reserve.jpg)
+
+**Beispiel im Bild:** Eingestellt sind 30 % Reserve und 33 % Wiederfreigabe
+(30 % plus 3 Prozentpunkte Entlade-Hysterese). Der graue Schalter ist **aus**;
+die zusätzliche Reserve wird erst nach Einschalten gehalten. **Entladen für
+Reserve gesperrt** zeigt, ob die Reserve aktuell die Entladung verhindert.
+Der voreingestellte Reservewert einer neuen Installation beträgt 40 %.
 
 Unter **Batteriegrenzen und Schutz** die Option **Reserve für Stromausfall behalten**
 aktivieren und **Reserve im Netzbetrieb** einstellen, zum Beispiel 40 %.
@@ -486,6 +510,54 @@ der ursprünglichen Ansicht wirksam.
 > Strategien nicht angeboten.
 
 ## Bedienung und Lademodi
+
+### Schnellsteuerung im Alltag
+
+![Schnellsteuerung mit Regelung, Zielladung, Automatik und Zyklusstart](docs/images/dashboard-schnellsteuerung.jpg)
+
+Die vier Bedienelemente auf der **Speicher**-Seite haben unterschiedliche Aufgaben:
+
+- **Regelung:** schaltet die gesamte Steuerung des Energiemanagers ein oder aus.
+- **Zielladung:** startet oder beendet die manuelle Ladung mit den zuvor unter
+  **Laden und Zyklus** eingestellten Werten.
+- **Automatik:** schaltet die Zyklusüberwachung ein oder aus. **Ein** bedeutet
+  nicht, dass gerade geladen wird.
+- **Zyklusstart:** startet die Zyklusladung sofort mit ihrem eigenen Lademodus
+  und Vollladeziel. Die Angabe darüber zeigt den letzten Tastendruck.
+
+**Für den ersten Start:** Zuerst Einstellungen und Lademodi prüfen, dann
+**Regelung** einschalten. Für den normalen Alltagsbetrieb muss **Zielladung**
+nicht eingeschaltet werden. Einen Zyklusstart brauchst du nur, wenn du die
+Zyklusladung sofort auslösen möchtest.
+
+![Betriebsbereitschaft: Produktivregelung ein, Fehlerwiederherstellung bereit und Eingangsdaten gültig](docs/images/dashboard-betriebsbereitschaft.jpg)
+
+Unter **Regelungsstatus** prüfst du **Produktivregelung**,
+**Fehlerwiederherstellung** und **Eingangsdaten**. Die Kombination im Bild zeigt
+eine betriebsbereite Regelung. Trotzdem kann eine SOC-Grenze die Entladung
+verhindern; dafür ist zusätzlich die Zeile **Status** maßgeblich.
+
+### Grundmodus auswählen
+
+![Geöffnete Grundmodus-Auswahl mit Normalbetrieb und PV-Überschuss](docs/images/dashboard-grundmodus.jpg)
+
+Öffne **Einstellungen → Betriebsart und Netzziel → Grundmodus**. Hier wählst
+du zwischen **Normalbetrieb** und **PV-Überschuss** für Zeiten ohne Zielladung.
+Die reine Auswahl eines Grundmodus startet keine manuelle Ladung. Die
+Unterschiede stehen in den folgenden Abschnitten.
+
+### Manuelle Zielladung vorbereiten und starten
+
+![Lademodus-Auswahl der manuellen Zielladung mit Netzladung, PV-Überschuss, PV-Vorrang und PV plus Netz](docs/images/dashboard-lademodi.jpg)
+
+1. **Einstellungen → Laden und Zyklus** öffnen.
+2. Unter **Manuelle Zielladung** den **Lademodus** auswählen. Anders als beim
+   Grundmodus stehen hier vier Ladearten zur Verfügung.
+3. **Ladeziel** und eine zum Speicher passende **Gewünschte Ladeleistung**
+   einstellen. Die Bedeutung der Leistung hängt vom gewählten Lademodus ab;
+   die folgenden Abschnitte erklären das jeweilige Verhalten.
+4. Erst danach **Zielladung starten** einschalten. Zum Beenden den Schalter
+   ausschalten; nach Zielerreichung wird die manuelle Zielladung automatisch beendet.
 
 ### Normalbetrieb
 
@@ -650,6 +722,14 @@ Netzbezug. AC-PV wird dabei nicht doppelt abgezogen.
 
 ### Status: ausgewählt, aktiv und tatsächlich genutzt
 
+![Statusanzeige mit ausgewähltem und aktivem Lademodus, PV-Berücksichtigung und tatsächlicher Ladequelle](docs/images/dashboard-ladestatus.jpg)
+
+**So erkennst du, ob wirklich geladen wird:** Vergleiche **Aktiver Vorgang**,
+**Zustand des Lademodus** und **Tatsächliche Ladequelle** mit der gemessenen
+Leistung **Akku lädt**. Im Bild ist Normalbetrieb ausgewählt, die Entladung
+gesperrt und **Keine Ladung** als Ladequelle angezeigt. Ein gewählter Modus
+allein belegt noch keinen Energiefluss.
+
 - **Aktiver Vorgang** zeigt, wer die Sollwerte exklusiv besitzt: Normalbetrieb,
   manuelle Zielladung, manuelle oder automatische Zyklusladung oder Tarifladung.
 - **Ausgewählter Lademodus** zeigt die Einstellung; **Aktiver Lademodus** die
@@ -741,6 +821,15 @@ vorausschauend die günstigsten Zeitfenster von heute oder morgen und
 berücksichtigt keine PV-Prognose.
 
 ### Zyklusladung
+
+![Laden-Unterseite mit manueller Zielladung links und automatischer Zyklusüberwachung rechts](docs/images/dashboard-laden.jpg)
+
+**Zwei getrennte Funktionen:** Links wählst du Lademodus und Ladeziel für
+die manuelle Zielladung und startest sie mit **Zielladung starten**. Rechts
+stellst du Prüfzeit, Lademodus, Vollladeziel und Intervall der Zyklusladung ein.
+Im Bild ist nur die automatische Überwachung eingeschaltet; eine manuelle
+Zielladung läuft nicht. Die gezeigten Leistungs- und Zielwerte sind Beispiele
+und müssen zu deinem Speicher passen.
 
 Die Zyklusladung verwendet ihren eigenen **Lademodus** und ihr eigenes
 **Vollladeziel**:
