@@ -36,6 +36,7 @@ STATUS_OPTIONS = (
 )
 
 SENSORS = (
+    XT500SensorDescription(key="reserve_release_soc", translation_key="reserve_release_soc", icon="mdi:battery-arrow-up", native_unit_of_measurement=PERCENTAGE, value_fn=lambda r: r.reserve_release_soc),
     XT500SensorDescription(key="status", translation_key="status", icon="mdi:shield-search", device_class=SensorDeviceClass.ENUM, options=STATUS_OPTIONS, value_fn=lambda r: r.display_status),
     XT500SensorDescription(
         key="recovery_status",

@@ -8,6 +8,7 @@ from homeassistant.helpers.entity_platform import AddConfigEntryEntitiesCallback
 
 from . import XT500ConfigEntry
 from .const import (
+    SETTING_RESERVE_ENABLED,
     SETTING_AUTO_ENABLED,
     SETTING_FULL_BATTERY_PV_EXPORT,
     SETTING_AUTOMATIC_RECOVERY_ENABLED,
@@ -20,6 +21,7 @@ from .entity import XT500Entity
 from .runtime import XT500Runtime
 
 SWITCHES = (
+    SwitchEntityDescription(key=SETTING_RESERVE_ENABLED, translation_key="reserve_enabled", icon="mdi:battery-lock"),
     SwitchEntityDescription(key=SETTING_REGULATION_ENABLED, translation_key="regulation_enabled", icon="mdi:power"),
     SwitchEntityDescription(key=SETTING_AUTOMATIC_RECOVERY_ENABLED, translation_key="automatic_recovery_enabled", icon="mdi:shield-refresh"),
     SwitchEntityDescription(key=SETTING_MANUAL_ACTIVE, translation_key="manual_active", icon="mdi:battery-arrow-up"),

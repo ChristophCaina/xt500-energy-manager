@@ -982,6 +982,7 @@ class XT500EnergyManagerDashboardStrategy extends HTMLElement {
   }
 
   static async generate(config, hass) {
+    const dashboardPath = config.dashboard_path || "xt500-energiemanager";
     const managers = new Map();
     for (const [entityId, state] of Object.entries(hass.states)) {
       if (state.attributes.integration !== "xt500_energy_manager") continue;
@@ -1173,6 +1174,10 @@ class XT500EnergyManagerDashboardStrategy extends HTMLElement {
         ["maximum_grid_output", "Hausnetz-Limit"],
       ]);
       const batteryProtectionCards = compactSettingGroup("Batteriegrenzen und Schutz", "mdi:battery-lock", [
+        ["reserve_enabled", "Reserve für Stromausfall behalten"],
+        ["reserve_soc", "Reserve im Netzbetrieb (%)"],
+        ["reserve_release_soc", "Entladen wieder möglich ab (%)"],
+        ["reserve_hold", "Entladen für Reserve gesperrt"],
         [actualLoadDischargeLimit, "Lastanschluss-Entladegrenze"],
         ["minimum_soc", "Entladegrenze"],
         ["soc_hysteresis", "Entlade-Hysterese (SI1)"],
@@ -1413,7 +1418,7 @@ class XT500EnergyManagerDashboardStrategy extends HTMLElement {
             icon: "mdi:battery-charging-high",
             tap_action: {
               action: "navigate",
-              navigation_path: `/xt500-energiemanager/laden${settingsSuffix}`,
+              navigation_path: `/${dashboardPath}/laden${settingsSuffix}`,
             },
             grid_options: { columns: 6, rows: 1 },
           },
@@ -1423,7 +1428,7 @@ class XT500EnergyManagerDashboardStrategy extends HTMLElement {
             icon: "mdi:tune-vertical",
             tap_action: {
               action: "navigate",
-              navigation_path: `/xt500-energiemanager/feinabstimmung${settingsSuffix}`,
+              navigation_path: `/${dashboardPath}/feinabstimmung${settingsSuffix}`,
             },
             grid_options: { columns: 6, rows: 1 },
           },
@@ -1451,7 +1456,7 @@ class XT500EnergyManagerDashboardStrategy extends HTMLElement {
         path: `laden${settingsSuffix}`,
         icon: "mdi:battery-charging-high",
         subview: true,
-        back_path: `/xt500-energiemanager/einstellungen${settingsSuffix}`,
+        back_path: `/${dashboardPath}/einstellungen${settingsSuffix}`,
         type: "sections",
         max_columns: 2,
         sections: [
@@ -1470,7 +1475,7 @@ class XT500EnergyManagerDashboardStrategy extends HTMLElement {
         path: `feinabstimmung${settingsSuffix}`,
         icon: "mdi:tune-vertical",
         subview: true,
-        back_path: `/xt500-energiemanager/einstellungen${settingsSuffix}`,
+        back_path: `/${dashboardPath}/einstellungen${settingsSuffix}`,
         type: "sections",
         max_columns: 2,
         sections: orderedVisibleBlocks(config, "settings", {
@@ -1507,6 +1512,6 @@ if (!window.customStrategies.some((strategy) => strategy.type === "xt500-energy-
     strategyType: "dashboard",
     name: "XT500 Energiemanager",
     description: "Automatisch erzeugte Bedien- und Diagnoseoberfläche für den XT500 Energiemanager.",
-    documentationURL: "https://github.com/achim1985/xt500-energy-manager#4-dashboard-strategie-einrichten",
+    documentationURL: "https://github.com/achim1985/xt500-energy-manager#4-dashboard-einrichten",
   });
 }

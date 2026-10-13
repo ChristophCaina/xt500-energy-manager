@@ -35,6 +35,7 @@ BINARY_SENSORS = (
         entity_registry_enabled_default=False,
         value_fn=lambda r: r.control_ready,
     ),
+    XT500BinaryDescription(key="reserve_hold", translation_key="reserve_hold", icon="mdi:battery-lock", value_fn=lambda r: r.reserve_hold_active),
     XT500BinaryDescription(key="discharge_hold", translation_key="discharge_hold", icon="mdi:battery-lock", value_fn=lambda r: r.discharge_hold_active),
     XT500BinaryDescription(key="discharge_override_active", translation_key="discharge_override_active", icon="mdi:battery-unlock", value_fn=lambda r: r.discharge_override_active),
     XT500BinaryDescription(key="pv_release_active", translation_key="pv_release_active", icon="mdi:solar-power", value_fn=lambda r: r.pv_release_active),
@@ -66,6 +67,10 @@ class XT500BinarySensor(XT500Entity, BinarySensorEntity):
                 self.runtime.entry.data.get("ac_pv_power_entity")
             )
             attrs["issue"] = self.runtime.ac_pv_input_issue
+        elif self.key == "reserve_hold":
+            attrs["reserve"] = self.runtime.settings["reserve_soc"]
+            attrs["wiederfreigabe"] = self.runtime.reserve_release_soc
+            attrs["regelung_verfuegbar"] = self.runtime.control_operational
         elif self.key in ("discharge_hold", "discharge_override_active"):
             attrs["entladegrenze"] = self.runtime.settings["minimum_soc"]
             attrs["regulaere_wiederfreigabe"] = self.runtime.discharge_release_soc

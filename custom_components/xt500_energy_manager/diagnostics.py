@@ -108,6 +108,12 @@ async def async_get_config_entry_diagnostics(_hass: HomeAssistant, entry: XT500C
                 runtime.result.pv_surplus_correction if runtime.result else None
             ),
         },
+        "reserve": {
+            "enabled": runtime.settings["reserve_enabled"],
+            "soc": runtime.settings["reserve_soc"],
+            "held": runtime.reserve_hold_active,
+            "release_soc": runtime.reserve_release_soc,
+        },
         "discharge_lock": {
             "active": runtime.discharge_hold_active,
             "temporary_release_active": runtime.discharge_override_active,

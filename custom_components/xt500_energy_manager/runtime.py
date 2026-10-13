@@ -7,6 +7,7 @@ from collections.abc import Callable
 from dataclasses import replace
 from datetime import UTC, datetime, time, timedelta
 import logging
+import math
 from time import monotonic
 from typing import TYPE_CHECKING, Any
 
@@ -84,6 +85,8 @@ from .const import (
     SETTING_MANUAL_MODE,
     SETTING_MAX_GRID_OUTPUT,
     SETTING_MAX_INVERTER_OUTPUT,
+    SETTING_RESERVE_ENABLED,
+    SETTING_RESERVE_SOC,
     SETTING_MIN_SOC,
     SETTING_NORMAL_CHARGE_LIMIT,
     SETTING_PV_START_DELAY,
@@ -206,6 +209,7 @@ class XT500Runtime:
         self._full_battery_pv_hold = False
         self._full_battery_pv_transition = FullBatteryBypassState()
         self._full_battery_pv_entry_task: asyncio.Task | None = None
+        self._reserve_hold: bool | None = None
         self._low_soc_hold: bool | None = None
         self._discharge_override_session_active = False
         self._discharge_override_restore_task: asyncio.Task | None = None
@@ -264,6 +268,10 @@ class XT500Runtime:
         """Restore settings and begin production observation."""
         stored = await self._store.async_load()
         migrated = False
+        if not isinstance(stored, dict):
+            # First installation observes only until the user enables control.
+            self.settings[SETTING_REGULATION_ENABLED] = False
+            migrated = True
         if isinstance(stored, dict):
             self.settings.update(
                 {key: stored[key] for key in DEFAULT_SETTINGS if key in stored}
@@ -772,6 +780,12 @@ class XT500Runtime:
             hysteresis=hysteresis,
             temporary_release=temporary_release,
         )
+        self._reserve_hold = update_discharge_hold(
+            current_hold=self._reserve_hold,
+            soc=values[CONF_SOC_ENTITY],
+            minimum_soc=float(self.settings[SETTING_RESERVE_SOC]),
+            hysteresis=min(hysteresis, 100 - float(self.settings[SETTING_RESERVE_SOC])),
+        ) if self.settings[SETTING_RESERVE_ENABLED] else None
         if override_active and not temporary_release:
             self._schedule_discharge_override_restore()
 
@@ -818,7 +832,7 @@ class XT500Runtime:
                 ),
                 minimum_soc=minimum_soc,
                 soc_hysteresis=hysteresis,
-                discharge_hold=bool(self._low_soc_hold),
+                discharge_hold=self.discharge_hold_active,
                 charge_power=charge_request.charge_power,
                 target_grid_power=float(self.settings[SETTING_TARGET_GRID_POWER]),
                 grid_limit=float(self.settings[SETTING_MAX_GRID_OUTPUT]),
@@ -837,7 +851,7 @@ class XT500Runtime:
                 ),
                 full_battery_pv_export=bool(
                     self.settings[SETTING_FULL_BATTERY_PV_EXPORT]
-                ),
+                ) and not self.reserve_hold_active,
                 full_battery_pv_hold=self._full_battery_pv_hold,
                 coupling_mode=self.settings[SETTING_COUPLING_MODE],
             ),
@@ -1263,7 +1277,15 @@ class XT500Runtime:
     @property
     def discharge_hold_active(self) -> bool:
         """Return whether battery discharge is currently blocked by SOC."""
-        return bool(self._low_soc_hold)
+        return bool(self._low_soc_hold) or self.reserve_hold_active
+
+    @property
+    def reserve_hold_active(self) -> bool:
+        return bool(self.settings[SETTING_RESERVE_ENABLED] and self._reserve_hold)
+
+    @property
+    def reserve_release_soc(self) -> float:
+        return min(100.0, float(self.settings[SETTING_RESERVE_SOC]) + float(self.settings[SETTING_SOC_HYSTERESIS]))
 
     @property
     def discharge_override_active(self) -> bool:
@@ -2151,6 +2173,12 @@ class XT500Runtime:
             maximum_change,
         )
 
+        if self.reserve_hold_active:
+            inverter_target = min(inverter_target, self._quantized_entity_target(
+                inverter_entity, self.result.recommended_inverter_setpoint))
+            grid_target = min(grid_target, self._quantized_entity_target(
+                grid_entity, self.result.recommended_grid_setpoint))
+
         setpoint_wrote = False
         wrote = False
         for entity_id, target, is_control_setpoint in (
@@ -2430,6 +2458,8 @@ class XT500Runtime:
             raise HomeAssistantError(
                 "Die Eingangsdaten müssen für die temporäre Entladefreigabe gültig sein."
             )
+        if self.settings[SETTING_RESERVE_ENABLED]:
+            raise HomeAssistantError("Bei aktiver Reserve ist die einmalige Entladefreigabe gesperrt.")
         if self.discharge_override_active:
             raise HomeAssistantError(
                 "Die temporäre Entladefreigabe ist bereits aktiv."
@@ -2585,6 +2615,13 @@ class XT500Runtime:
     @callback
     def async_set_setting(self, key: str, value: Any) -> None:
         """Persist an integration-owned setting and recalculate."""
+        if key in (SETTING_RESERVE_ENABLED, SETTING_RESERVE_SOC):
+            if key == SETTING_RESERVE_ENABLED and value and self.discharge_override_active:
+                raise HomeAssistantError("Zuerst die einmalige Entladefreigabe beenden.")
+            if key == SETTING_RESERVE_SOC:
+                if not math.isfinite(float(value)) or not 1 <= float(value) <= 99:
+                    raise HomeAssistantError("Die Reserve muss zwischen 1 und 99 % liegen.")
+            self._reserve_hold = None
         self.settings[key] = value
         if (
             key == SETTING_AUTO_ENABLED

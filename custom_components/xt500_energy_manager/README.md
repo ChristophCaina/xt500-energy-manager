@@ -1,8 +1,14 @@
-# XT500 Energy Manager 1.11.2
+# XT500 Energy Manager 1.11.3
 
-Production-ready Home Assistant controller for SunEnergyXT XT500 and XT500 Pro
+Community Home Assistant controller for SunEnergyXT XT500 and XT500 Pro
 systems. The integration directly controls the grid-port setpoint, inverter
 ceiling, and system charge limit.
+
+Optional grid-operation reserve uses the original discharge hysteresis without
+changing device SOC settings. First-time setup can create the sidebar dashboard
+and register its JavaScript automatically. Existing layouts and deliberate
+removal are preserved. The reserve does not guarantee island supply or protection
+during a Home Assistant or network outage.
 
 ## Safety and control behavior
 
@@ -44,7 +50,7 @@ ceiling, and system charge limit.
   device feedback before the switch reports off.
 - The lower-SOC discharge hold is reconstructed safely after reloads. A
   one-shot dashboard action may temporarily release it within the hysteresis
-  band; the original device limit is restored with verified feedback at the
+  band only while the optional reserve is disabled; the original device limit is restored with verified feedback at the
   configured lower limit, on shutdown, or after restart.
 
 ## Charge limits and targets
@@ -151,15 +157,17 @@ management hash prevents locally modified copies from being overwritten.
 6. Select the external total grid-power sensor and confirm its sign convention.
    Optionally select AC PV power and its sign. A full manual expert setup remains
    available.
-7. Ensure no other automation writes those same number entities, then enable
+7. New installations start with regulation disabled. Ensure no other automation
+   writes those same number entities, then enable
    the energy manager.
 
 ## Generated dashboard
 
-Register
-`/xt500_energy_manager/xt500-energy-dashboard-strategy.js?v=1.11.2` once as a
-JavaScript module under Settings → Dashboards → Resources. Then add the
-**XT500 Energiemanager** community dashboard.
+First-time setup enables **Create dashboard automatically** by default. It
+registers the JavaScript module and creates the sidebar dashboard. Existing
+entries retain their manual workflow. With YAML-managed resources or opt-out,
+register `/xt500_energy_manager/xt500-energy-dashboard-strategy.js` as a
+JavaScript module, then add the **XT500 Energiemanager** community dashboard.
 
 The generated dashboard uses only built-in Home Assistant cards. It includes
 status, power flows, manual and automatic charging, normal-operation limits,

@@ -12,6 +12,7 @@ from homeassistant.core import callback
 from homeassistant.helpers import device_registry as dr, entity_registry as er, selector
 
 from .const import (
+    CONF_AUTO_DASHBOARD,
     CONF_AC_PV_POWER_ENTITY,
     CONF_AC_PV_SIGN,
     CONF_BATTERY_INPUT_POWER_ENTITY,
@@ -76,6 +77,7 @@ def _manual_schema(defaults: dict[str, Any] | None = None) -> vol.Schema:
 
     return vol.Schema(
         {
+            vol.Optional(CONF_AUTO_DASHBOARD, default=values.get(CONF_AUTO_DASHBOARD, True)): selector.BooleanSelector(),
             **_external_grid_schema(values),
             required(CONF_SOC_ENTITY): _entity_selector("sensor"),
             required(CONF_PV_POWER_ENTITY): _entity_selector("sensor"),
@@ -117,6 +119,7 @@ def _automatic_schema(defaults: dict[str, Any] | None = None) -> vol.Schema:
     values = defaults or {}
     ac_pv_marker = vol.Optional(CONF_AC_PV_POWER_ENTITY)
     schema: dict[vol.Marker, Any] = {
+        vol.Optional(CONF_AUTO_DASHBOARD, default=values.get(CONF_AUTO_DASHBOARD, True)): selector.BooleanSelector(),
         **_external_grid_schema(values),
         vol.Required(CONF_XT500_DEVICE): selector.DeviceSelector(
             selector.DeviceSelectorConfig(integration="sunenergyxt")
@@ -222,7 +225,7 @@ class XT500EnergyManagerConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
                 self._abort_if_unique_id_configured()
                 return self.async_create_entry(
                     title=_device_title(self.hass, user_input[CONF_XT500_DEVICE]),
-                    data=data,
+                    data={**data, CONF_AUTO_DASHBOARD: user_input.get(CONF_AUTO_DASHBOARD, True)},
                 )
             errors["base"] = error or "unknown"
         return self.async_show_form(
@@ -237,7 +240,7 @@ class XT500EnergyManagerConfigFlow(config_entries.ConfigFlow, domain=DOMAIN):
         if user_input is not None:
             await self.async_set_unique_id(user_input[CONF_GRID_SETPOINT_ENTITY])
             self._abort_if_unique_id_configured()
-            return self.async_create_entry(title="XT500 Energiemanager", data=user_input)
+            return self.async_create_entry(title="XT500 Energiemanager", data={**user_input, CONF_AUTO_DASHBOARD: user_input.get(CONF_AUTO_DASHBOARD, True)})
         return self.async_show_form(step_id="manual", data_schema=_manual_schema())
 
     @staticmethod
@@ -264,14 +267,16 @@ class XT500OptionsFlow(config_entries.OptionsFlow):
                 self.hass.config_entries.async_update_entry(
                     self.config_entry,
                     title=_device_title(self.hass, user_input[CONF_XT500_DEVICE]),
-                    data=data,
+                    data={**data, CONF_AUTO_DASHBOARD: user_input.get(
+                        CONF_AUTO_DASHBOARD, self.config_entry.data.get(CONF_AUTO_DASHBOARD, False)
+                    )},
                 )
                 return self.async_create_entry(title="", data={})
             errors["base"] = error or "unknown"
         return self.async_show_form(
             step_id="automatic",
             data_schema=self.add_suggested_values_to_schema(
-                _automatic_schema(), dict(self.config_entry.data)
+                _automatic_schema({**self.config_entry.data, CONF_AUTO_DASHBOARD: self.config_entry.data.get(CONF_AUTO_DASHBOARD, False)}), dict(self.config_entry.data)
             ),
             errors=errors,
         )
@@ -287,6 +292,6 @@ class XT500OptionsFlow(config_entries.OptionsFlow):
         return self.async_show_form(
             step_id="manual",
             data_schema=self.add_suggested_values_to_schema(
-                _manual_schema(), dict(self.config_entry.data)
+                _manual_schema({**self.config_entry.data, CONF_AUTO_DASHBOARD: self.config_entry.data.get(CONF_AUTO_DASHBOARD, False)}), dict(self.config_entry.data)
             ),
         )

@@ -689,3 +689,29 @@ test("unterstützt kompakte und ausgeblendete Energieseiten", async () => {
     "feinabstimmung",
   ]);
 });
+
+test("zeigt Reserve und automatische Wiederfreigabe ohne eigene Hysterese", async () => {
+  const hass = createLayoutHass();
+  for (const key of ["reserve_enabled", "reserve_soc", "reserve_release_soc", "reserve_hold"]) {
+    hass.states[`sensor.test_${key}`] = {state: "40", attributes: {
+      integration: "xt500_energy_manager", xt500_manager_id: "manager-1", xt500_key: key,
+    }};
+  }
+  const result = await Strategy.generate({}, hass);
+  const serialized = JSON.stringify(result);
+  for (const key of ["reserve_enabled", "reserve_soc", "reserve_release_soc", "reserve_hold"]) {
+    assert.ok(serialized.includes(`sensor.test_${key}`));
+  }
+  assert.ok(!serialized.includes("reserve_hysteresis"));
+});
+
+test("verwendet die automatisch gewählte Dashboard-Adresse auch für Unterseiten", async () => {
+  const result = await Strategy.generate({dashboard_path: "xt500-energiemanager-2"}, createLayoutHass());
+  const settings = result.views.find(view => view.path === "einstellungen");
+  const serialized = JSON.stringify(settings);
+  assert.ok(serialized.includes("/xt500-energiemanager-2/laden"));
+  assert.ok(serialized.includes("/xt500-energiemanager-2/feinabstimmung"));
+  for (const path of ["laden", "feinabstimmung"]) {
+    assert.equal(result.views.find(view => view.path === path).back_path, "/xt500-energiemanager-2/einstellungen");
+  }
+});

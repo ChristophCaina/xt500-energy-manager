@@ -14,6 +14,7 @@
         "title": "XT500 automatisch einrichten",
         "description": "Wähle dein SunEnergy-XT500-Gerät. Die originalen Speicher-, Leistungs- und Sollwert-Entitäten werden automatisch erkannt. Öffentlicher Stromzähler und die optionale Erzeugungsleistung einer externen AC-PV-Anlage bleiben manuell.",
         "data": {
+          "auto_dashboard": "Dashboard automatisch erstellen",
           "xt500_device": "SunEnergy-XT500-Gerät",
           "grid_power_entity": "Gesamtleistung am öffentlichen Netzanschlusspunkt",
           "meter_sign": "Vorzeichen des öffentlichen Zählers",
@@ -23,6 +24,7 @@
           "external_grid_invert": "Vorzeichen des Netzleistungssensors invertieren"
         },
         "data_description": {
+          "auto_dashboard": "Dashboard automatisch erstellen",
           "xt500_device": "Das Gerät muss aus der zuvor installierten SunEnergyXT 500 Series Integration stammen.",
           "grid_power_entity": "Gesamt-Wirkleistung des Hauses, zum Beispiel vom Shelly Pro 3EM. Keine einzelne Phase und keine XT500-Anschlussleistung.",
           "meter_sign": "Prüfe an einem aktuellen Messwert, welches Vorzeichen dein Zähler bei Netzbezug verwendet.",
@@ -36,6 +38,7 @@
         "title": "Entitäten manuell auswählen",
         "description": "Expertenmodus: Alle Sollwerte werden im Produktivbetrieb direkt auf die ausgewählten Geräteentitäten geschrieben.",
         "data": {
+          "auto_dashboard": "Dashboard automatisch erstellen",
           "soc_entity": "Speicherstand (SOC)",
           "pv_power_entity": "PV direkt am XT500",
           "ac_pv_power_entity": "Externe AC-PV-Erzeugung (optional)",
@@ -100,6 +103,7 @@
         "title": "XT500-Entitäten automatisch erkennen",
         "description": "Die originalen Entitäten des ausgewählten SunEnergy-XT500-Geräts werden übernommen. Öffentlicher Stromzähler und die optionale Erzeugungsleistung einer externen AC-PV-Anlage werden separat ausgewählt.",
         "data": {
+          "auto_dashboard": "Dashboard automatisch erstellen",
           "xt500_device": "SunEnergy-XT500-Gerät",
           "grid_power_entity": "Gesamtleistung am öffentlichen Netzanschlusspunkt",
           "meter_sign": "Vorzeichen des öffentlichen Zählers",
@@ -109,6 +113,7 @@
           "external_grid_invert": "Vorzeichen des Netzleistungssensors invertieren"
         },
         "data_description": {
+          "auto_dashboard": "Dashboard automatisch erstellen",
           "xt500_device": "Das Gerät muss aus der zuvor installierten SunEnergyXT 500 Series Integration stammen.",
           "grid_power_entity": "Gesamt-Wirkleistung des Hauses, zum Beispiel vom Shelly Pro 3EM. Keine einzelne Phase und keine XT500-Anschlussleistung.",
           "meter_sign": "Prüfe an einem aktuellen Messwert, welches Vorzeichen dein Zähler bei Netzbezug verwendet.",
@@ -122,6 +127,7 @@
         "title": "Entitäten manuell ändern",
         "description": "Expertenmodus: Alle Sollwerte werden im Produktivbetrieb direkt auf die ausgewählten Geräteentitäten geschrieben.",
         "data": {
+          "auto_dashboard": "Dashboard automatisch erstellen",
           "soc_entity": "Speicherstand (SOC)",
           "pv_power_entity": "PV direkt am XT500",
           "ac_pv_power_entity": "Externe AC-PV-Erzeugung (optional)",
@@ -160,6 +166,7 @@
   },
   "entity": {
     "sensor": {
+      "reserve_release_soc": { "name": "Wiederfreigabe der Reserve" },
       "status": {
         "name": "Status",
         "state": {
@@ -286,6 +293,7 @@
       }
     },
     "binary_sensor": {
+      "reserve_hold": { "name": "Entladen für Reserve gesperrt" },
       "data_valid": {
         "name": "Eingangsdaten gültig",
         "state": {
@@ -306,6 +314,7 @@
       "ac_pv_input_valid": { "name": "Optionaler AC-PV-Sensor gültig" }
     },
     "switch": {
+      "reserve_enabled": { "name": "Reserve für Stromausfall behalten" },
       "regulation_enabled": { "name": "Energiemanager aktiv" },
       "automatic_recovery_enabled": { "name": "Automatische Fehlerwiederherstellung" },
       "manual_active": { "name": "Manuelle Zielladung starten" },
@@ -333,6 +342,7 @@
       }
     },
     "number": {
+      "reserve_soc": { "name": "Reserve im Netzbetrieb" },
       "target_soc": { "name": "Ladeziel der manuellen Zielladung" },
       "tariff_target_soc": { "name": "Ladeziel der Tarifladung" },
       "tariff_charge_power": { "name": "Netzleistung der Tarifladung" },

@@ -5,7 +5,7 @@ from __future__ import annotations
 from typing import Final
 
 DOMAIN: Final = "xt500_energy_manager"
-VERSION: Final = "1.11.2"
+VERSION: Final = "1.11.3"
 PLATFORMS: Final = (
     "sensor",
     "binary_sensor",
@@ -122,6 +122,9 @@ SETTING_CYCLE_INTERVAL_DAYS: Final = "cycle_interval_days"
 SETTING_CYCLE_CHECK_TIME: Final = "cycle_check_time"
 SETTING_CYCLE_MANUAL_ACTIVE: Final = "cycle_manual_active"
 SETTING_CYCLE_AUTOMATIC_ACTIVE: Final = "cycle_automatic_active"
+CONF_AUTO_DASHBOARD: Final = "auto_dashboard"
+SETTING_RESERVE_ENABLED: Final = "reserve_enabled"
+SETTING_RESERVE_SOC: Final = "reserve_soc"
 SETTING_MIN_SOC: Final = "minimum_soc"
 SETTING_SOC_HYSTERESIS: Final = "soc_hysteresis"
 SETTING_CHARGE_SOC_HYSTERESIS: Final = "charge_soc_hysteresis"
@@ -180,6 +183,8 @@ DEFAULT_SETTINGS: Final = {
     SETTING_CYCLE_CHECK_TIME: "12:00:00",
     SETTING_CYCLE_MANUAL_ACTIVE: False,
     SETTING_CYCLE_AUTOMATIC_ACTIVE: False,
+    SETTING_RESERVE_ENABLED: False,
+    SETTING_RESERVE_SOC: 40.0,
     SETTING_MIN_SOC: 10.0,
     SETTING_SOC_HYSTERESIS: 5.0,
     SETTING_CHARGE_SOC_HYSTERESIS: 5.0,

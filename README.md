@@ -1,9 +1,13 @@
 # XT500 Energy Manager
 
-Home-Assistant-Integration zur produktiven Regelung von SunEnergyXT XT500 und
-XT500 Pro. Sie übernimmt Nulleinspeisung, normales Laden, manuelle Zielladung,
-manuelle und zeitgesteuerte Zyklusladung sowie die Begrenzung der
-Wechselrichterleistung.
+Home-Assistant-Integration für SunEnergyXT XT500 und XT500 Pro: Nulleinspeisung,
+PV-Überschussregelung mit DC-/AC-PV-Unterstützung, manuelle Zielladung,
+automatische und manuelle Zyklusladung sowie Tarifladung. Dazu kommen
+Leistungsbegrenzungen, eine optionale Entladereserve für Stromausfälle,
+Überwachung und Fehlerbehebung sowie ein bei der Ersteinrichtung automatisch
+angelegtes Dashboard mit Bedienung, Energieübersicht und Verlauf.
+Optional lassen sich externe Netzleistungsmessung und Bezugs-/Einspeiseenergie
+nutzen. Voraussetzung ist die eingerichtete originale SunEnergyXT-Integration.
 
 > [!NOTE]
 > Dies ist ein unabhängiges Community-Projekt und keine offizielle
@@ -31,7 +35,8 @@ Wechselrichterleistung.
 - [1. SunEnergyXT 500 Series installieren](#1-sunenergyxt-500-series-installieren)
 - [2. XT500 Energy Manager installieren](#2-xt500-energy-manager-installieren)
 - [3. Integration einrichten](#3-integration-einrichten)
-- [4. Dashboard-Strategie einrichten](#4-dashboard-strategie-einrichten)
+- [4. Dashboard einrichten](#4-dashboard-einrichten)
+- [Entladereserve](#optionale-entladereserve)
 - [Bedienung und Lademodi](#bedienung-und-lademodi)
 - [Dynamischer Stromtarif](#dynamischer-stromtarif)
 - [Sicherheitsverhalten](#sicherheitsverhalten)
@@ -48,8 +53,9 @@ Wechselrichterleistung.
 - für die komfortable Dashboard-Erstellung über den Community-Dialog:
   Home Assistant 2026.5 oder neuer
 
-Die Integration wurde mit Home Assistant 2026.7 und der SunEnergyXT-Integration
-1.1.3 getestet.
+Der bisherige Stand wurde mit Home Assistant 2026.7 und der SunEnergyXT-Integration
+1.1.3 getestet. Entladereserve und automatische Dashboard-Einrichtung sind neue,
+lokal geprüfte Erweiterungen; ihre Prüfung im laufenden HA und am Gerät steht aus.
 
 ## 1. SunEnergyXT 500 Series installieren
 
@@ -100,9 +106,11 @@ Die Integration wurde mit Home Assistant 2026.7 und der SunEnergyXT-Integration
    - heutige Netzeinspeisung (`GD2`)
    - heutige Off-Grid-Ausgabe (`LD`)
 
-Erst wenn die für die Regelung zuerst genannten Entitäten verfügbar und nicht
-`unavailable` sind, mit dem XT500 Energy Manager fortfahren. Die vier
-Tagesenergien sind reine optionale Dashboard-Werte.
+Für die Regelung erforderlich sind `SC`, `PV`, `GP`, `LP`, `GS`, `IS`, `SA`
+und `SI` sowie ein öffentlicher Netzleistungssensor. Diese Werte müssen verfügbar
+sein. Geräte-Hysteresen, Lastanschlussgrenze, Batterieleistung und Tagesenergien
+werden zusätzlich verwendet, sofern vorhanden. Fehlende optionale Tagesenergien
+verhindern die Einrichtung nicht.
 
 Ab SunEnergyXT 1.1.3 lässt sich unter **Einstellungen → Geräte & Dienste →
 SunEnergyXT 500 Series → Konfigurieren** das Geräte-Abfrageintervall von 3 bis
@@ -179,7 +187,7 @@ Im ersten Dialog stehen zwei Wege zur Auswahl:
 1. **Automatisch über das XT500-Gerät einrichten (empfohlen)**
 2. **Entitäten manuell auswählen (Expertenmodus)**
 
-Bei der automatischen Einrichtung wird nur das Gerät der zuvor installierten
+Bei der automatischen Einrichtung wird das Gerät der zuvor installierten
 **SunEnergyXT 500 Series** Integration ausgewählt. Der Energiemanager erkennt
 die originalen XT500-Entitäten anhand ihrer stabilen Gerätekennungen
 automatisch. Umbenannte Anzeigenamen sind daher kein Problem.
@@ -247,6 +255,10 @@ Messwertes prüfen.
 
 ### Vor dem ersten Einschalten
 
+Bei einer neuen Installation startet **Regelung aktiv** ausgeschaltet.
+Das Dashboard ist bereits nutzbar, bevor die Gerätesteuerung eingeschaltet wird.
+Gespeicherte Schalterstellungen bestehender Installationen bleiben erhalten.
+
 1. Alte Nulleinspeisungs-Automationen oder Blueprints deaktivieren.
 2. Prüfen, dass kein anderer Regler `GS`, `IS` oder `SA` beschreibt.
 3. Für einen normalen XT500 die **Maximale Leistung ins Hausnetz** üblicherweise
@@ -256,9 +268,18 @@ Messwertes prüfen.
    abhängig vom Gerätebereich bis zu `2400 W` Netzladung möglich.
 5. Erst danach **Regelung aktiv** einschalten.
 
-## 4. Dashboard-Strategie einrichten
+## 4. Dashboard einrichten
 
-Die Strategie erzeugt in der ausführlichen Standarddarstellung sechs Ansichten:
+### Automatische Einrichtung bei Erstinstallation
+
+Im Einrichtungsdialog ist **Dashboard automatisch erstellen** bereits aktiviert.
+Das Dashboard **XT500 Energiemanager** erscheint in der Seitenleiste; Ressource
+und Strategie werden automatisch eingerichtet. Bestehende XT500-Dashboards
+und eigene Anpassungen bleiben erhalten. Bewusst gelöschte Dashboards werden
+nicht bei jedem Neustart neu angelegt. Die folgenden manuellen Schritte sind
+nur bei ausgeschalteter Automatik oder YAML-Ressourcen erforderlich.
+
+Die Strategie erzeugt in der ausführlichen Standarddarstellung sechs Hauptansichten:
 
 - **Speicher:** Status, Speicherstand, Leistungsflüsse, heutige Energiewerte
   und Schnellsteuerung für Regelung, manuelle Zielladung und Zyklusladung
@@ -269,9 +290,9 @@ Die Strategie erzeugt in der ausführlichen Standarddarstellung sechs Ansichten:
   Geräteverbrauch
 - **Live:** aktueller Gesamtverbrauch, Akkustand, Leistung nach Quelle und
   momentaner Leistungsfluss als Sankey-Diagramm
-- **Einstellungen:** Anleitung, manuelle Zielladung, Zyklusüberwachung,
-  tägliche Prüfzeit, manueller Zyklusstart, Normalbetrieb und erweiterte
-  Regelparameter
+- **Einstellungen:** Anleitung, Hauptsteuerung, Normalbetrieb, Geräte-SOC-Grenzen
+  und Reserve. Von hier öffnen **Laden und Zyklus** die Ladeeinstellungen und
+  **Feinabstimmung** die erweiterten Regelparameter. Beide sind Unterseiten.
 
 Die vier Energieseiten verwenden ausschließlich die in Home Assistant unter
 **Energie** konfigurierten Quellen und Statistikdaten. Ihre Datumsauswahl und
@@ -291,8 +312,8 @@ werden.
 ![XT500-Energiemanager-Dashboard mit markiertem Zahnradsymbol für die Einstellungsansicht](docs/images/dashboard-einstellungen-zugang.png)
 
 > [!TIP]
-> Auf das markierte Zahnradsymbol klicken, um Ladeziele, Zyklusladung,
-> Normalbetrieb und die erweiterten Regelparameter einzustellen.
+> Auf das markierte Zahnradsymbol klicken. Ladeziele und Zyklusladung liegen
+> unter **Laden und Zyklus**, erweiterte Regelparameter unter **Feinabstimmung**.
 
 Sie verwendet ausschließlich standardmäßig mit Home Assistant ausgelieferte
 Karten.
@@ -303,7 +324,28 @@ Reiter in die obere Leiste aufnehmen. Die Quellansicht bleibt dabei die
 führende Konfiguration: Änderungen an ihr erscheinen nach einem vollständigen
 Neuladen auch im Energiemanager-Dashboard.
 
-### Schritt 1: JavaScript-Ressource registrieren
+### Optionale Entladereserve
+
+Unter **Batteriegrenzen und Schutz** die Option **Reserve für Stromausfall behalten**
+aktivieren und **Reserve im Netzbetrieb** einstellen, zum Beispiel 40 %.
+Die zusätzliche Sperre verwendet die originale Entlade-Hysterese, sofern `SI1`
+zugeordnet ist; bei älteren Geräten gilt die vorhandene Entlade-Hysterese des
+Energiemanagers. Beispiel: bei 3
+Prozentpunkten wird Entladen ab 43 % wieder möglich. Der angezeigte
+Wiederfreigabewert ist auf 100 % begrenzt. Die Gerätesperre muss ebenfalls
+freigegeben sein. Reserve und Gerätewerte werden getrennt gespeichert;
+Ladegrenze und Geräte-Hysterese werden durch diese Funktion nicht verändert.
+Eine höhere Reserve startet keine zusätzliche Netzladung. Die einmalige
+Entladefreigabe ist bei aktiver Reserve gesperrt.
+
+Die Reserve betrifft den Netzbetrieb bei funktionierender HA-Regelung.
+Insel-/Lastausgang und dessen eigene Entladegrenze bleiben unverändert.
+HA-Ausfall oder Kommunikationsverlust kann das Halten der Reserve verhindern;
+die Funktion garantiert weder Notstromversorgung noch einen exakten physikalischen
+Stopp an der Prozentgrenze. Nach Neustart bleibt die Reserve im Hystereseband
+vorsorglich gesperrt.
+
+### Manuell, Schritt 1: JavaScript-Ressource registrieren
 
 1. **Einstellungen → Dashboards** öffnen.
 2. Oben rechts das Drei-Punkte-Menü öffnen.
@@ -312,7 +354,7 @@ Neuladen auch im Energiemanager-Dashboard.
 5. Als URL exakt eintragen:
 
    ```text
-   /xt500_energy_manager/xt500-energy-dashboard-strategy.js?v=1.11.2
+   /xt500_energy_manager/xt500-energy-dashboard-strategy.js
    ```
 
 6. Als Ressourcentyp **JavaScript-Modul** auswählen.
@@ -645,7 +687,8 @@ Integration automatisch in den Grundbetrieb zurück.
 > [!IMPORTANT]
 > Bei hohem Strompreis ist kein eigener Entlademodus erforderlich. Im
 > Normalbetrieb versorgt der Energiemanager das Haus bereits aus dem Akku,
-> solange die Entladegrenze nicht erreicht ist. Die Tarifsteuerung fordert
+> solange die Geräte-Entladegrenze oder eine aktivierte Reserve nicht erreicht ist.
+> Die Tarifsteuerung fordert
 > keine Batterieeinspeisung in das öffentliche Netz an.
 
 #### Mitgelieferten Preis-Blueprint verwenden
@@ -788,7 +831,9 @@ wird ein vermeintlich ausgeschalteter Regler mit alten Sollwerten vermieden.
 1. **Regelung aktiv** ausschalten.
 2. Das von HACS angebotene Update installieren.
 3. Home Assistant neu starten.
-4. Die Versionsnummer der Dashboard-Ressource auf die neue Version ändern.
+4. Bei einer manuell registrierten Ressource mit `?v=…` den Versionszusatz
+   aktualisieren oder entfernen. Automatisch registrierte Ressourcen benötigen
+   keine manuelle Versionsänderung.
 5. **Ressourcen neu laden** oder den Browser vollständig neu laden.
 6. Dashboard, Eingangsdaten und Produktivregelung prüfen.
 7. Regelung wieder aktivieren.
@@ -799,12 +844,32 @@ wird ein vermeintlich ausgeschalteter Regler mit alten Sollwerten vermieden.
 2. Das neue GitHub-Release als ZIP herunterladen.
 3. Den vorhandenen Ordner
    `/config/custom_components/xt500_energy_manager` durch den neuen ersetzen.
-4. Die Versionsnummer der Dashboard-Ressource an die neue Version anpassen.
+4. Bei einer manuell registrierten Ressource mit `?v=…` den Versionszusatz
+   aktualisieren oder entfernen.
 5. Home Assistant neu starten.
 6. Dashboard und Eingangsdaten prüfen.
 7. Regelung wieder aktivieren.
 
 ## Fehlerbehebung
+
+### Automatisches Dashboard fehlt
+
+- Prüfen, ob **Dashboard automatisch erstellen** bei der Einrichtung aktiviert war.
+- Unter **Benachrichtigungen** nach **XT500 Dashboard** suchen; dort steht der
+  konkrete Fehler, beispielsweise manuell verwaltete YAML-Ressourcen.
+- Nach Behebung des Fehlers den Integrationseintrag neu laden.
+- Ein bewusst gelöschtes Dashboard über die manuellen Schritte erneut anlegen.
+  Bereits eingerichtete Integrationen werden beim Update nicht automatisch umgestellt.
+
+### Reserve wird unterschritten oder Entladen bleibt gesperrt
+
+- **Regelung aktiv**, gültige Eingangsdaten und betriebsbereite Regelung prüfen.
+- **Entladen für Reserve gesperrt** und den angezeigten Wiederfreigabewert prüfen. Auch die
+  originale Gerätesperre muss die Entladung erlauben.
+- Insel-/Lastanschlussverbrauch wird durch die Netzreserve nicht abgeschaltet.
+- Ein höher eingestellter Reservewert lädt den Speicher nicht automatisch nach.
+- Bei HA-Ausfall gelten weiterhin Geräteeinstellungen und möglicherweise letzte
+  Sollwerte. Die HA-Reserve ist keine geräteseitige Notstromgarantie.
 
 ### „XT500 Energy Manager“ erscheint nicht bei den Integrationen
 
@@ -818,7 +883,7 @@ wird ein vermeintlich ausgeschalteter Regler mit alten Sollwerten vermieden.
 ### Dashboard meldet „Timeout waiting for strategy element“
 
 - Prüfen, ob die Ressource als **JavaScript-Modul** eingetragen ist.
-- URL und Versionsnummer prüfen.
+- Die Ressourcen-URL mit der Anleitung vergleichen.
 - **Ressourcen neu laden** oder einen vollständigen Browser-Neustart
   durchführen.
 
@@ -838,8 +903,8 @@ wird ein vermeintlich ausgeschalteter Regler mit alten Sollwerten vermieden.
   Eintrag neu laden oder Home Assistant neu starten. Die optionalen Sensoren
   werden bei jedem Laden der Integration erneut automatisch erkannt.
 - Im Strategy-Editor prüfen, ob der Block **Energie heute** ausgeblendet wurde.
-- Die Dashboard-Ressource auf `?v=1.11.2` setzen und Ressourcen beziehungsweise
-  Browser vollständig neu laden.
+- Ressourcen beziehungsweise Browser vollständig neu laden. Bei alten
+  manuellen URLs einen veralteten `?v=…`-Zusatz aktualisieren oder entfernen.
 
 ### Eingangsdaten sind ungültig
 
@@ -878,7 +943,9 @@ Auch bei einem kurzen Netzbezug bleibt diese Rückführung aktiv, damit der
 Sollwert nicht wieder in die Akkuentladung zurückpendelt. Die Regelung senkt
 dabei ausschließlich die XT500-Ausgangsleistung.
 
-Version 1.11.2 baut auf dem für SunEnergyXT 1.1.3 vorbereiteten Stand auf. Rückmeldungen aus
+Version 1.11.3 ergänzt eine optionale Entladereserve und die automatische
+Dashboard-Erstellung bei der Ersteinrichtung. Sie baut auf dem für SunEnergyXT
+1.1.3 vorbereiteten Stand auf. Rückmeldungen aus
 unterschiedlichen XT500- und XT500-Pro-Systemen, Firmwareständen,
 PV-Kopplungen und Stromzählern sind weiterhin willkommen.
 

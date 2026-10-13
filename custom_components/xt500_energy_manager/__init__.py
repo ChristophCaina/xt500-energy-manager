@@ -44,6 +44,7 @@ from .const import (
 )
 from .entity_mapping import detect_xt500_entities
 from .runtime import XT500Runtime
+from .dashboard_setup import async_ensure_dashboard
 from .grid_meter import ExternalGridMeter
 
 type XT500ConfigEntry = ConfigEntry[XT500Runtime]
@@ -191,6 +192,7 @@ async def async_setup_entry(hass: HomeAssistant, entry: XT500ConfigEntry) -> boo
         )
     entry.async_on_unload(entry.add_update_listener(_async_reload_entry))
     await hass.config_entries.async_forward_entry_setups(entry, PLATFORMS)
+    await async_ensure_dashboard(hass, entry)
     return True
 
 

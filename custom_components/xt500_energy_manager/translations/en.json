@@ -14,6 +14,7 @@
         "title": "Set up XT500 automatically",
         "description": "Select your SunEnergy XT500 device. Its original entities are detected automatically. The public grid meter and optional AC PV power remain manual.",
         "data": {
+          "auto_dashboard": "Create dashboard automatically",
           "xt500_device": "SunEnergy XT500 device",
           "grid_power_entity": "Total power at the public grid connection",
           "meter_sign": "Public meter sign convention",
@@ -23,6 +24,7 @@
           "external_grid_invert": "Invert grid power sensor sign"
         },
         "data_description": {
+          "auto_dashboard": "Create dashboard automatically",
           "xt500_device": "The device must come from the previously installed SunEnergyXT 500 Series integration.",
           "grid_power_entity": "Total active power of the home, for example from a Shelly Pro 3EM. Do not select one phase or an XT500 port value.",
           "meter_sign": "Use a current reading to verify which sign your meter reports during grid import.",
@@ -36,6 +38,7 @@
         "title": "Select entities manually",
         "description": "Expert mode: Production control writes all setpoints directly to the selected device entities.",
         "data": {
+          "auto_dashboard": "Create dashboard automatically",
           "soc_entity": "Battery state of charge",
           "pv_power_entity": "PV power directly at the XT500",
           "ac_pv_power_entity": "External AC PV production (optional)",
@@ -100,6 +103,7 @@
         "title": "Detect XT500 entities automatically",
         "description": "The original entities of the selected SunEnergy XT500 device are used. Select the public grid meter and optional AC PV power separately.",
         "data": {
+          "auto_dashboard": "Create dashboard automatically",
           "xt500_device": "SunEnergy XT500 device",
           "grid_power_entity": "Total power at the public grid connection",
           "meter_sign": "Public meter sign convention",
@@ -109,6 +113,7 @@
           "external_grid_invert": "Invert grid power sensor sign"
         },
         "data_description": {
+          "auto_dashboard": "Create dashboard automatically",
           "xt500_device": "The device must come from the previously installed SunEnergyXT 500 Series integration.",
           "grid_power_entity": "Total active power of the home, for example from a Shelly Pro 3EM. Do not select one phase or an XT500 port value.",
           "meter_sign": "Use a current reading to verify which sign your meter reports during grid import.",
@@ -122,6 +127,7 @@
         "title": "Change entities manually",
         "description": "Expert mode: Production control writes all setpoints directly to the selected device entities.",
         "data": {
+          "auto_dashboard": "Create dashboard automatically",
           "soc_entity": "Battery state of charge",
           "pv_power_entity": "PV power directly at the XT500",
           "ac_pv_power_entity": "External AC PV production (optional)",
@@ -160,6 +166,7 @@
   },
   "entity": {
     "sensor": {
+      "reserve_release_soc": { "name": "Reserve discharge re-enable SOC" },
       "status": {
         "name": "Status",
         "state": {
@@ -286,6 +293,7 @@
       }
     },
     "binary_sensor": {
+      "reserve_hold": { "name": "Discharge blocked by reserve" },
       "data_valid": {
         "name": "Input data valid",
         "state": {
@@ -306,6 +314,7 @@
       "ac_pv_input_valid": { "name": "Optional AC PV sensor valid" }
     },
     "switch": {
+      "reserve_enabled": { "name": "Keep backup reserve" },
       "regulation_enabled": { "name": "Energy manager enabled" },
       "automatic_recovery_enabled": { "name": "Automatic error recovery" },
       "manual_active": { "name": "Start manual target charging" },
@@ -333,6 +342,7 @@
       }
     },
     "number": {
+      "reserve_soc": { "name": "Grid operation reserve" },
       "target_soc": { "name": "Manual target charge level" },
       "tariff_target_soc": { "name": "Tariff charging target" },
       "tariff_charge_power": { "name": "Tariff grid charging power" },
